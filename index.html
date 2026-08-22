@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pocket Moment — small pauses, well spent</title>
+<style>
+  :root {
+    --bg-1: #eef3f0;
+    --bg-2: #e6eef2;
+    --card: #ffffff;
+    --ink: #2c3a3a;
+    --ink-soft: #5c6b6b;
+    --accent: #4f8a7b;
+    --accent-soft: #dcebe6;
+    --accent-strong: #3a6f61;
+    --border: #e1e8e5;
+    --shadow: 0 10px 30px rgba(60, 90, 85, 0.08);
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(160deg, var(--bg-1), var(--bg-2));
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 18px;
+    color: var(--accent-strong);
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+
+  .brand .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .streak-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-left: 4px;
+  }
+
+  .streak-pill.pulse {
+    animation: pulse 0.5s ease;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px 28px;
+    border: 1px solid var(--border);
+    animation: rise 0.35s ease;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .progress {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+
+  .progress .step {
+    width: 26px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    transition: background 0.3s ease;
+  }
+
+  .progress .step.active {
+    background: var(--accent);
+  }
+
+  h1 {
+    font-size: 1.35rem;
+    margin: 0 0 6px;
+    text-align: center;
+    color: var(--ink);
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    margin: 0 0 26px;
+    line-height: 1.5;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .goal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .goal-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 18px 10px;
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    background: #fafcfb;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+    user-select: none;
+  }
+
+  .goal-card:hover {
+    border-color: var(--accent);
+  }
+
+  .goal-card.selected {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+
+  .goal-card .icon { font-size: 1.6rem; }
+  .goal-card .label { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
+
+  .hint {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    min-height: 20px;
+    margin-bottom: 14px;
+  }
+
+  .time-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .time-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    background: #fafcfb;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .time-option:hover { border-color: var(--accent); }
+
+  .time-option.selected {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+
+  .time-option .t-label {
+    font-weight: 600;
+    font-size: 0.98rem;
+  }
+
+  .time-option .t-desc {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin-top: 2px;
+  }
+
+  .time-option .t-icon { font-size: 1.3rem; }
+
+  button.primary {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    background: var(--accent);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+
+  button.primary:hover:not(:disabled) { background: var(--accent-strong); }
+  button.primary:active:not(:disabled) { transform: scale(0.98); }
+
+  button.primary:disabled {
+    background: #cdd8d5;
+    cursor: not-allowed;
+  }
+
+  button.ghost {
+    width: 100%;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.15s ease;
+  }
+
+  button.ghost:hover {
+    border-color: var(--accent);
+    color: var(--accent-strong);
+  }
+
+  .back-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .back-link {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px 0;
+  }
+
+  .back-link:hover { color: var(--accent-strong); }
+
+  .suggestions {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+
+  .suggestion-card {
+    padding: 18px;
+    border-radius: 16px;
+    background: #fafcfb;
+    border: 1.5px solid var(--border);
+  }
+
+  .suggestion-card .goal-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--accent-strong);
+    background: var(--accent-soft);
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+
+  .suggestion-card .activity-text {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+
+  .shuffle-btn {
+    border: none;
+    background: none;
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+  }
+
+  .shuffle-btn:hover { color: var(--accent-strong); }
+
+  .complete-btn {
+    margin-bottom: 4px;
+  }
+
+  .complete-btn.done {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+    cursor: default;
+  }
+
+  .complete-btn.done:hover { background: var(--accent-soft); }
+
+  .streak-message {
+    text-align: center;
+    font-size: 0.88rem;
+    color: var(--accent-strong);
+    font-weight: 600;
+    min-height: 20px;
+    margin: 10px 0 6px;
+  }
+
+  .footer-note {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+    margin-top: 22px;
+  }
+
+  .time-tracker {
+    text-align: center;
+    color: var(--ink-soft);
+    font-size: 0.82rem;
+    margin: 0 0 16px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand"><span class="dot"></span> Pocket Moment <span class="streak-pill" id="streak-pill" hidden></span></div>
+  <p class="time-tracker" id="time-tracker"></p>
+  <div class="card">
+
+    <div class="progress" id="progress">
+      <div class="step" data-step="1"></div>
+      <div class="step" data-step="2"></div>
+      <div class="step" data-step="3"></div>
+    </div>
+
+    <!-- Screen 1: Goals -->
+    <div class="screen active" id="screen-1">
+      <h1>What would you like more of?</h1>
+      <p class="subtitle">Pick 2–3 goals. We'll use these to suggest small moments that fit your wait.</p>
+      <div class="goal-grid" id="goal-grid"></div>
+      <p class="hint" id="goal-hint">Choose at least 2 to continue</p>
+      <button class="primary" id="goals-next" disabled>Continue</button>
+    </div>
+
+    <!-- Screen 2: Time -->
+    <div class="screen" id="screen-2">
+      <div class="back-row"><button class="back-link" id="back-to-1">&larr; Back</button></div>
+      <h1>How much time do you have?</h1>
+      <p class="subtitle">Even a minute counts. We'll match something to fit.</p>
+      <div class="time-list" id="time-list"></div>
+      <button class="primary" id="time-next" disabled>Show me something</button>
+    </div>
+
+    <!-- Screen 3: Suggestions -->
+    <div class="screen" id="screen-3">
+      <div class="back-row"><button class="back-link" id="back-to-2">&larr; Back</button></div>
+      <h1>Here's an idea</h1>
+      <p class="subtitle" id="suggestion-subtitle">Small moment, well spent.</p>
+      <div class="suggestions" id="suggestions"></div>
+      <button class="primary complete-btn" id="complete-btn">I did it ✅</button>
+      <p class="streak-message" id="streak-message"></p>
+      <button class="ghost" id="start-over">Start over</button>
+    </div>
+
+  </div>
+  <p class="footer-note">Made for the moments in between.</p>
+</div>
+
+<script>
+(function () {
+  // ---------- Content bank ----------
+  // Each goal has 4 time brackets: 1, 5, 15, 30 (minutes, 30 = "30+")
+  const GOALS = [
+    { id: "reading",     label: "Read more",         icon: "📖" },
+    { id: "exercise",    label: "Exercise more",     icon: "🏃" },
+    { id: "mindful",     label: "Be more mindful",   icon: "🌿" },
+    { id: "connect",     label: "Connect with people", icon: "💬" },
+    { id: "language",    label: "Learn a language",  icon: "🗣️" },
+  ];
+
+  const TIME_OPTIONS = [
+    { id: "1",  label: "1 minute",   icon: "⚡", desc: "Just a beat" },
+    { id: "5",  label: "5 minutes",  icon: "⏱️", desc: "A short pause" },
+    { id: "15", label: "15 minutes", icon: "🕒", desc: "A proper break" },
+    { id: "30", label: "30+ minutes", icon: "⏳", desc: "Some real time" },
+  ];
+
+  const CONTENT = {
+    reading: {
+      1: [
+        "Read one page of the book you're currently in.",
+        "Read a short poem end to end.",
+        "Read today's top headline in full, past the summary.",
+        "Look up a word you didn't know recently and read its full entry.",
+        "Read the opening paragraph of a book you've been meaning to start.",
+        "Skim the intro of an article you saved for later."
+      ],
+      5: [
+        "Read a few pages of your current book.",
+        "Read a piece of flash fiction (most are under 1,000 words).",
+        "Read a chapter summary of a book that's on your list.",
+        "Read one well-written essay excerpt or long-form thread.",
+        "Read a news article all the way through, not just the headline.",
+        "Browse a reading list, pick your next book, and read its first page."
+      ],
+      15: [
+        "Read a solid chunk of your current book — aim for 10-15 pages.",
+        "Read a full short story from start to finish.",
+        "Read a long-form article or essay on a topic you're curious about.",
+        "Read a couple of book reviews to build out your to-read list.",
+        "Reread a favorite passage and think about why it stuck with you."
+      ],
+      30: [
+        "Read a big chunk of your book — a full chapter or two.",
+        "Read an entire short story collection piece.",
+        "Read a long-form magazine feature start to finish.",
+        "Start a new book you've been wanting to get to.",
+        "Do a slow, annotated read of an article — jot notes as you go."
+      ]
+    },
+    exercise: {
+      1: [
+        "Do 20 bodyweight squats.",
+        "Hold a plank for a full minute.",
+        "Do calf raises while you stand and wait.",
+        "Stretch your neck and shoulders slowly.",
+        "Do 15 discreet jumping jacks or knee lifts.",
+        "Take a brisk lap around where you're standing."
+      ],
+      5: [
+        "Do a quick circuit: squats, lunges, and push-ups.",
+        "Take a brisk 5-minute walk.",
+        "Do a full stretch — arms, legs, back, neck.",
+        "Climb a few flights of stairs if any are nearby.",
+        "Do wall push-ups and calf raises back to back.",
+        "Follow along with a 5-minute mobility routine from memory."
+      ],
+      15: [
+        "Go for a 15-minute walk outside.",
+        "Do a short bodyweight HIIT round.",
+        "Run through a 15-minute yoga flow.",
+        "Do a stretching and light foam-rolling session.",
+        "Take stairs up and down a few times as a mini workout."
+      ],
+      30: [
+        "Go for a run or a long walk.",
+        "Do a full home workout video.",
+        "Head to the gym for a quick, focused session.",
+        "Go for a bike ride.",
+        "Follow a 30-minute yoga class."
+      ]
+    },
+    mindful: {
+      1: [
+        "Take 10 deep breaths, counting each one.",
+        "Do a 1-minute body scan from head to toe.",
+        "Ground yourself: name 5 things you see, 4 you hear, 3 you feel.",
+        "Close your eyes and focus only on your breath.",
+        "Silently name three things you're grateful for right now."
+      ],
+      5: [
+        "Do a 5-minute guided meditation.",
+        "Practice box breathing (4-4-4-4) for a few minutes.",
+        "Take a slow, mindful walk, noticing each step.",
+        "Write down three things you're grateful for.",
+        "Do a progressive muscle relaxation for the parts of you that are tense."
+      ],
+      15: [
+        "Do a 15-minute guided meditation.",
+        "Journal about how you're feeling right now, no filter.",
+        "Take a mindful walk and really notice your surroundings.",
+        "Do a full body-scan meditation.",
+        "Practice a loving-kindness meditation for yourself and others."
+      ],
+      30: [
+        "Do a full 30-minute meditation session.",
+        "Take a mindful walk somewhere with a bit of nature.",
+        "Try a yoga nidra (guided rest) session.",
+        "Journal deeply about a challenge you're facing.",
+        "Unplug completely and just sit with your thoughts for a while."
+      ]
+    },
+    connect: {
+      1: [
+        "Send a quick text telling a friend you're thinking of them.",
+        "Leave a genuine comment on a friend's recent post.",
+        "Send a voice message to a family member.",
+        "Jot down someone you want to reach out to this week."
+      ],
+      5: [
+        "Call a friend or family member just to say hi.",
+        "Write a thoughtful message to someone you haven't talked to in a while.",
+        "Catch someone up on your life with a longer text.",
+        "Leave a heartfelt review or shout-out for someone's work.",
+        "Text a friend to plan a get-together."
+      ],
+      15: [
+        "Have a phone call catching up with a friend.",
+        "Video call a family member.",
+        "Write a heartfelt email to someone you appreciate.",
+        "Write a letter or card to send to someone.",
+        "Reach out to an old friend you've lost touch with."
+      ],
+      30: [
+        "Have a real, unhurried conversation with a friend or family member.",
+        "Video call someone who lives far away.",
+        "Write a batch of thank-you notes to people who've helped you.",
+        "Plan a get-together with a group of friends.",
+        "Call someone you've been meaning to reconnect with."
+      ]
+    },
+    language: {
+      1: [
+        "Review 5 flashcards in your language app.",
+        "Practice counting to 20 in your target language.",
+        "Recite the alphabet in your target language.",
+        "Say today's date and a greeting in your target language.",
+        "Look up one new word and use it in a sentence."
+      ],
+      5: [
+        "Do a quick lesson in your language app.",
+        "Practice a short conversation script out loud.",
+        "Review a set of vocabulary flashcards.",
+        "Listen to a short clip in your target language and repeat it back.",
+        "Write three sentences using new vocabulary."
+      ],
+      15: [
+        "Complete a full lesson in your language app.",
+        "Watch a short video in your target language with subtitles.",
+        "Practice speaking out loud about your day.",
+        "Read a short article or story in your target language.",
+        "Do a focused grammar review session."
+      ],
+      30: [
+        "Do a conversation practice session — app, tutor, or partner.",
+        "Watch a TV episode in your target language.",
+        "Do an extended reading session in your target language.",
+        "Complete multiple lessons in your language app.",
+        "Listen to a podcast in your target language and take notes."
+      ]
+    }
+  };
+
+  // ---------- State ----------
+  const state = {
+    goals: new Set(),
+    time: null,
+    lastPick: {} // goalId -> last suggestion text, to avoid immediate repeat on shuffle
+  };
+
+  // ---------- Elements ----------
+  const goalGrid = document.getElementById("goal-grid");
+  const goalHint = document.getElementById("goal-hint");
+  const goalsNextBtn = document.getElementById("goals-next");
+  const timeList = document.getElementById("time-list");
+  const timeNextBtn = document.getElementById("time-next");
+  const suggestionsEl = document.getElementById("suggestions");
+  const suggestionSubtitle = document.getElementById("suggestion-subtitle");
+  const progressSteps = document.querySelectorAll("#progress .step");
+  const streakPill = document.getElementById("streak-pill");
+  const completeBtn = document.getElementById("complete-btn");
+  const streakMessage = document.getElementById("streak-message");
+
+  // ---------- Streak tracking (persisted in localStorage) ----------
+  const STREAK_KEY = "pocketMomentStreak";
+
+  function todayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  }
+
+  function shiftDay(dateKey, delta) {
+    const [y, m, d] = dateKey.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + delta);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+  }
+
+  function loadStreak() {
+    try {
+      const raw = localStorage.getItem(STREAK_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* localStorage unavailable, fall back to defaults */ }
+    return { currentStreak: 0, longestStreak: 0, lastCompletedDate: null };
+  }
+
+  function saveStreak(streak) {
+    try {
+      localStorage.setItem(STREAK_KEY, JSON.stringify(streak));
+    } catch (e) { /* ignore write failures (e.g. private browsing) */ }
+  }
+
+  // Streak "breaks" the moment a day is missed, even before the next completion
+  // formally resets the stored count — this computes what should be shown right now.
+  function displayStreak(streak) {
+    if (!streak.lastCompletedDate) return 0;
+    const today = todayKey();
+    const yesterday = shiftDay(today, -1);
+    if (streak.lastCompletedDate === today || streak.lastCompletedDate === yesterday) {
+      return streak.currentStreak;
+    }
+    return 0;
+  }
+
+  function markStreakComplete() {
+    const streak = loadStreak();
+    const today = todayKey();
+    if (streak.lastCompletedDate === today) return streak;
+    const yesterday = shiftDay(today, -1);
+    streak.currentStreak = streak.lastCompletedDate === yesterday ? streak.currentStreak + 1 : 1;
+    streak.lastCompletedDate = today;
+    streak.longestStreak = Math.max(streak.longestStreak || 0, streak.currentStreak);
+    saveStreak(streak);
+    return streak;
+  }
+
+  function renderStreakPill(pulse) {
+    const streak = loadStreak();
+    const shown = displayStreak(streak);
+    if (shown > 0) {
+      streakPill.hidden = false;
+      streakPill.textContent = `🔥 ${shown} day${shown === 1 ? "" : "s"}`;
+      if (pulse) {
+        streakPill.classList.remove("pulse");
+        void streakPill.offsetWidth; // restart animation
+        streakPill.classList.add("pulse");
+      }
+    } else {
+      streakPill.hidden = true;
+    }
+  }
+
+  function updateCompleteButton() {
+    const streak = loadStreak();
+    const today = todayKey();
+    streakMessage.textContent = "";
+    if (streak.lastCompletedDate === today) {
+      const shown = displayStreak(streak);
+      completeBtn.textContent = `Done for today 🔥 ${shown} day${shown === 1 ? "" : "s"}`;
+      completeBtn.classList.add("done");
+      completeBtn.disabled = true;
+    } else {
+      completeBtn.textContent = "I did it ✅";
+      completeBtn.classList.remove("done");
+      completeBtn.disabled = false;
+    }
+  }
+
+  completeBtn.addEventListener("click", () => {
+    const streak = markStreakComplete();
+    updateCompleteButton();
+    renderStreakPill(true);
+    streakMessage.textContent = streak.currentStreak === 1
+      ? "Nice, that's day 1 — keep it up tomorrow!"
+      : `🔥 ${streak.currentStreak} days in a row! Best streak: ${streak.longestStreak} days.`;
+  });
+
+  renderStreakPill(false);
+
+  // ---------- Daily "time reclaimed" timer ----------
+  // Counts actual time spent in this app today (persisted per day in localStorage)
+  // and frames it as time that would otherwise likely go to doomscrolling.
+  const TIME_KEY = "pocketMomentTimeTrack";
+  const timeTrackerEl = document.getElementById("time-tracker");
+
+  function loadTimeTrack() {
+    let track;
+    try {
+      track = JSON.parse(localStorage.getItem(TIME_KEY));
+    } catch (e) { /* localStorage unavailable, fall back to defaults */ }
+    if (!track) track = { date: todayKey(), seconds: 0 };
+    if (track.date !== todayKey()) {
+      track = { date: todayKey(), seconds: 0 }; // new day, start fresh
+    }
+    return track;
+  }
+
+  function saveTimeTrack(track) {
+    try {
+      localStorage.setItem(TIME_KEY, JSON.stringify(track));
+    } catch (e) { /* ignore write failures (e.g. private browsing) */ }
+  }
+
+  function formatDuration(totalSeconds) {
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    if (m === 0) return `${s}s`;
+    if (s === 0) return `${m}m`;
+    return `${m}m ${s}s`;
+  }
+
+  function renderTimeTracker() {
+    if (timeTracker.seconds < 3) {
+      timeTrackerEl.textContent = "⏱️ Just getting started — every minute counts.";
+    } else {
+      timeTrackerEl.textContent = `⏱️ ${formatDuration(timeTracker.seconds)} here today — that's time not spent doomscrolling.`;
+    }
+  }
+
+  let timeTracker = loadTimeTrack();
+  renderTimeTracker();
+
+  setInterval(() => {
+    if (document.visibilityState !== "visible") return;
+    // Re-check the day on every tick in case the app is left open past midnight.
+    const today = todayKey();
+    if (timeTracker.date !== today) {
+      timeTracker = { date: today, seconds: 0 };
+    }
+    timeTracker.seconds += 1;
+    renderTimeTracker();
+    if (timeTracker.seconds % 5 === 0) saveTimeTrack(timeTracker);
+  }, 1000);
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") saveTimeTrack(timeTracker);
+  });
+  window.addEventListener("beforeunload", () => saveTimeTrack(timeTracker));
+
+  // ---------- Build Screen 1: Goals ----------
+  GOALS.forEach(goal => {
+    const card = document.createElement("div");
+    card.className = "goal-card";
+    card.dataset.goalId = goal.id;
+    card.innerHTML = `<span class="icon">${goal.icon}</span><span class="label">${goal.label}</span>`;
+    card.addEventListener("click", () => toggleGoal(goal.id, card));
+    goalGrid.appendChild(card);
+  });
+
+  function toggleGoal(id, card) {
+    if (state.goals.has(id)) {
+      state.goals.delete(id);
+      card.classList.remove("selected");
+    } else {
+      if (state.goals.size >= 3) {
+        goalHint.textContent = "You can pick up to 3 goals";
+        return;
+      }
+      state.goals.add(id);
+      card.classList.add("selected");
+    }
+    updateGoalHint();
+  }
+
+  function updateGoalHint() {
+    const n = state.goals.size;
+    if (n < 2) {
+      goalHint.textContent = "Choose at least 2 to continue";
+    } else {
+      goalHint.textContent = `${n} of 3 selected`;
+    }
+    goalsNextBtn.disabled = n < 2;
+  }
+
+  // ---------- Build Screen 2: Time ----------
+  TIME_OPTIONS.forEach(opt => {
+    const el = document.createElement("div");
+    el.className = "time-option";
+    el.dataset.timeId = opt.id;
+    el.innerHTML = `
+      <div>
+        <div class="t-label">${opt.label}</div>
+        <div class="t-desc">${opt.desc}</div>
+      </div>
+      <span class="t-icon">${opt.icon}</span>
+    `;
+    el.addEventListener("click", () => selectTime(opt.id, el));
+    timeList.appendChild(el);
+  });
+
+  function selectTime(id, el) {
+    document.querySelectorAll(".time-option").forEach(e => e.classList.remove("selected"));
+    el.classList.add("selected");
+    state.time = id;
+    timeNextBtn.disabled = false;
+  }
+
+  // ---------- Navigation ----------
+  function showScreen(n) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(`screen-${n}`).classList.add("active");
+    progressSteps.forEach(step => {
+      step.classList.toggle("active", Number(step.dataset.step) <= n);
+    });
+  }
+
+  document.getElementById("goals-next").addEventListener("click", () => showScreen(2));
+  document.getElementById("back-to-1").addEventListener("click", () => showScreen(1));
+  document.getElementById("back-to-2").addEventListener("click", () => showScreen(2));
+  document.getElementById("time-next").addEventListener("click", () => {
+    renderSuggestions();
+    showScreen(3);
+  });
+  document.getElementById("start-over").addEventListener("click", () => {
+    state.goals.clear();
+    state.time = null;
+    state.lastPick = {};
+    document.querySelectorAll(".goal-card").forEach(c => c.classList.remove("selected"));
+    document.querySelectorAll(".time-option").forEach(c => c.classList.remove("selected"));
+    goalsNextBtn.disabled = true;
+    timeNextBtn.disabled = true;
+    updateGoalHint();
+    showScreen(1);
+  });
+
+  const GOAL_LOOKUP = Object.fromEntries(GOALS.map(g => [g.id, g]));
+
+  const TIME_PHRASE = {
+    "1": "you've got a minute",
+    "5": "you've got 5 minutes",
+    "15": "you've got 15 minutes",
+    "30": "you've got some real time"
+  };
+
+  function pickSuggestion(goalId, timeId) {
+    const pool = CONTENT[goalId][timeId];
+    let choice;
+    if (pool.length === 1) {
+      choice = pool[0];
+    } else {
+      do {
+        choice = pool[Math.floor(Math.random() * pool.length)];
+      } while (choice === state.lastPick[goalId]);
+    }
+    state.lastPick[goalId] = choice;
+    return choice;
+  }
+
+  function renderSuggestions() {
+    suggestionSubtitle.textContent = `Since ${TIME_PHRASE[state.time]}, here's something for each goal:`;
+    suggestionsEl.innerHTML = "";
+    updateCompleteButton();
+    state.goals.forEach(goalId => {
+      const goal = GOAL_LOOKUP[goalId];
+      const text = pickSuggestion(goalId, state.time);
+      const card = document.createElement("div");
+      card.className = "suggestion-card";
+      card.dataset.goalId = goalId;
+      card.innerHTML = `
+        <div class="goal-tag">${goal.icon} ${goal.label}</div>
+        <div class="activity-text">${text}</div>
+        <button class="shuffle-btn">🔀 Try another</button>
+      `;
+      card.querySelector(".shuffle-btn").addEventListener("click", () => {
+        const newText = pickSuggestion(goalId, state.time);
+        card.querySelector(".activity-text").textContent = newText;
+      });
+      suggestionsEl.appendChild(card);
+    });
+  }
+})();
+</script>
+</body>
+</html>
