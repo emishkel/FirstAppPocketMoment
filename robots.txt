@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://emishkel.github.io/FirstAppPocketMoment/sitemap.xml
